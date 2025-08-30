@@ -1,4 +1,3 @@
-// src/components/AuthForms.jsx
 "use client"
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -20,12 +19,13 @@ const AuthForms = () => {
 
 useEffect(() => {
   if (typeof window !== "undefined") {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     if (token) {
-      router.replace('/upload');
+      router.push("/");
     }
   }
-}, [isLogin,formData]);
+}, []);
+
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -33,7 +33,7 @@ useEffect(() => {
       ...prev,
       [name]: value
     }));
-    // Clear error when user starts typing
+
     if (errors[name]) {
       setErrors(prev => ({
         ...prev,
@@ -69,44 +69,43 @@ useEffect(() => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    if (!validateForm()) return;
+ const handleSubmit = async (e) => {
+  e.preventDefault();
+  if (!validateForm()) return;
 
-    setIsLoading(true);
+  setIsLoading(true);
 
-    try {
-      const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
-      const payload = isLogin 
-        ? { email: formData.email, password: formData.password }
-        : { username: formData.username, email: formData.email, password: formData.password };
+  try {
+    const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
+    const payload = isLogin 
+      ? { email: formData.email, password: formData.password }
+      : { username: formData.username, email: formData.email, password: formData.password };
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}${endpoint}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
-      
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.message || (isLogin ? 'Login failed' : 'Registration failed'));
-      }
-      
-      // Store token or user data
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
-      
-      
-    } catch (error) {
-      setErrors({ submit: error.message });
-    } finally {
-      setIsLoading(false);
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}${endpoint}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || (isLogin ? 'Login failed' : 'Registration failed'));
     }
-  };
+
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('user', JSON.stringify(data.user));
+
+    // ✅ Redirect after success
+    router.push('/');
+    router.refresh(); // optional: refresh server components
+  } catch (error) {
+    setErrors({ submit: error.message });
+  } finally {
+    setIsLoading(false);
+  }
+};
+
 
   const toggleForm = () => {
     setIsLogin(!isLogin);
